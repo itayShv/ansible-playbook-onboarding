@@ -1,0 +1,36 @@
+---
+- name: Onboarding assignment - text file and python-devel
+  hosts: dana_dev
+  gather_facts: true
+
+  vars:
+    owner_name: "Itay"
+    text_file_path: "/tmp/ansible-text-file"
+    python_devel_package: "{{ 'python3-dev' if ansible_facts['os_family'] == 'Debian' else 'python3-devel' }}"
+
+  tasks:
+    - name: Create the text file and write my name into it
+      ansible.builtin.copy:
+        dest: "{{ text_file_path }}"
+        content: "{{ owner_name }}\n"
+        mode: "0644"
+
+    - name: Read the text file
+      ansible.builtin.slurp:
+        src: "{{ text_file_path }}"
+      register: text_file
+
+    - name: Print the text file contents
+      ansible.builtin.debug:
+        msg: "{{ text_file.content | b64decode }}"
+
+    - name: Install the Python 3 development package
+      ansible.builtin.package:
+        name: "{{ python_devel_package }}"
+        state: present
+      become: true
+
+    - name: Delete the text file
+      ansible.builtin.file:
+        path: "{{ text_file_path }}"
+        state: absent
